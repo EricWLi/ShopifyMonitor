@@ -37,6 +37,12 @@ def yeezy_monitor(config):
     while True:
         log("Polling {}".format(url))
         r = requests.get(url)
+        
+        if "password" in r.url:
+            yeezy_password_notify(config["webhook"])
+            time.sleep(config['poll'])
+            continue
+
         soup = BeautifulSoup(r.text, "html.parser")
         products_json = soup.find(id='js-featured-json').text
         products = json.loads(products_json)
@@ -64,6 +70,20 @@ def yeezy_notify(webhook_url, site, site_url, product):
             {"name": "Product", "value": product["handle"]},
             {"name": "Price", "value": '${:.2f}'.format(product["price"] / 100)},
         ]
+    }
+    
+    data = {"embeds": [embed]}
+    r = requests.post(webhook_url, data=json.dumps(data), headers={"Content-Type": "application/json"})
+    print(r.text)
+    
+def yeezy_password_notify(webhook_url):
+    embed = {
+        "title": "YeezySupply",
+        "description": "Password Page is Up!",
+        "url": "https://yeezysupply.com",
+        "color": 4223072,
+        "footer": {"text": "Discord Shopify Monitor by Eric"},
+        "author": {"name": "Shopify Monitor"}
     }
     
     data = {"embeds": [embed]}
